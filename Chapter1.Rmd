@@ -1,0 +1,73 @@
+---
+title: "Chapter1"
+author: "Mohammed Ali"
+date: "December 26, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR)
+library(dplyr)
+library(ggplot2)
+require(GGally)
+require(purrr)
+require(MASS)
+```
+
+# About
+This document will represent the solutions for the applied part for *Intorduction to Statistical Learning* book.
+
+# Questions
+Q.8
+Load college dataset and inspect it
+```{r College}
+data("College")
+glimpse(College)
+ggcorr(College[, 1:10])
+ggpairs(College[, 1:10])
+```
+
+Create a new qualitative variable, called Elite to divide universities into two groups based on whether or not the proportion of students coming from the top 10% of their high school
+classes exceeds 50%.
+
+```{r}
+ggplot(College, aes(y=Outstate, x=Private)) +
+  geom_boxplot()
+College <- College %>%
+  mutate(Elite = ifelse(Top10perc > 50, "Yes", "No"))
+College$Elite <- as.factor(College$Elite)
+table(College$Elite)
+
+```
+
+```{r}
+par(mfrow = c(2,2))
+hist(College$Books, col = 2, xlab = "Books", ylab = "Count")
+hist(College$PhD, col = 3, xlab = "PhD", ylab = "Count")
+hist(College$Grad.Rate, col = 4, xlab = "Grad Rate", ylab = "Count")
+hist(College$perc.alumni, col = 6, xlab = "% alumni", ylab = "Count")
+
+data("Auto")
+glimpse(Auto)
+summary(Auto[-9])
+map_dbl(Auto[-9], mean)
+map_dbl(Auto[-9], sd)
+
+auto_subset <-Auto[- c(10:85), -9]
+
+map_df(auto_subset, range)
+map_dbl(auto_subset, mean)
+map_dbl(auto_subset, sd)
+
+Auto$cylinders <- as.factor(Auto$cylinders)
+Auto$year <- as.factor(Auto$year)
+Auto$origin <- as.factor(Auto$origin)
+ggcorr(Auto[-9])
+ggpairs(Auto[-9])
+
+glimpse(Boston)
+ggcorr(Boston[Boston$crim < 20, ])
+ggpairs(Boston[Boston$crim < 20, ])
+
+```
