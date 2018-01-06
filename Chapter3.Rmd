@@ -1,0 +1,165 @@
+---
+title: "Chapter 3 Lab"
+author: "Mohammed Ali"
+date: "January 4, 2018"
+output: 
+  pdf_document:
+    toc: true
+  html_document:
+    keep_md: true
+        
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Libraries
+
+Load need libraries
+
+```{r message=FALSE}
+library (MASS) #which is a very large collection of data sets and functions
+library (ISLR) #which includes the data sets associated with this book
+library(dplyr) #for data set manuplations
+```
+
+# Simple Linear Regression
+
+The _MASS_ library contains the `Boston` data set, which records `medv` (median house value) for 506 neighborhoods around Boston. We will seek to predict `medv` using 13 predictors such as `rm` (average number of rooms per house),
+age (average age of houses), and lstat (percent of households with low
+socioeconomic status).
+
+```{r}
+glimpse(Boston)
+```
+
+We will start by using the `lm` function to fit a simple linear regression model, with `medv` as the response and `lstat` as the predictor. The basic syntax is `lm(y ~ x,data)`, where _y_ is the response, _x_ is the predictor, and
+_data_ is the data set in which these two variables are kept.
+
+```{r}
+lm.fit <- lm(medv ~ lstat, data = Boston)
+```
+
+If we type `lm.fit`, some basic information about the model is output.
+For more detailed information, we use `summary(lm.fit)`. This gives us _p-values_ and _standard errors_ for the coefficients, as well as the _R^2^_ statistic and _F-statistic_ for the model.
+
+```{r}
+lm.fit
+summary(lm.fit)
+```
+
+Let us remember the interpretation.
+
+## Residual
+Difference between what the model predicted and the actual value of y.  We can calculate the Residuals section like so:
+```{r}
+summary(lm.fit$residuals)
+```
+
+## Residual Standard Error
+Essentially standard deviation of residuals / errors of your regression model. _Standard deviation_ is the square root of _variance_.  Standard Error is very similar.  The only difference is that instead of dividing by `n-1`, you subtract `n minus 1 + # of variables involved`.
+
+```{r}
+#Residual Standard error (Like Standard Deviation)
+k <- length(lm.fit$coefficients)-1 #Subtract one to ignore intercept
+SSE <- sum(lm.fit$residuals**2)
+n <- length(lm.fit$residuals)
+sqrt(SSE/(n-(1+k))) #Residual Standard Error
+```
+It is the same value as above
+
+## Coefficients
+These are the weights that minimize the sum of the square of the errors.  
+_Std. Error_ -->  is Residual Standard Error (see below) divided by the square root of the sum of the square of that particular x variable.
+
+_t value_ --> Estimate divided by _Std. Error_
+
+_Pr(>|t|)_ --> Look up your t value in a T distribution table with the given degrees of freedom.
+
+## Multiple R-Squared
+Percent of the variance of Y intact after subtracting the error of the model. Also called the _coefficient of determination_, this is an oft-cited measurement of how well our model fits to the data.  While there are many issues with using it alone, it’s a quick and pre-computed check for our model.
+
+R-Squared subtracts the residual error from the variance in Y.  The bigger the error, the worse the remaining variance will appear.
+
+```{r}
+#Multiple R-Squared (Coefficient of Determination)
+SSyy <- sum((Boston$medv - mean(Boston$medv))**2)
+SSE <- sum(lm.fit$residuals**2)
+(SSyy-SSE)/SSyy
+#Alternatively
+1-SSE/SSyy
+```
+
+Same as above. Please note numerator doesn’t have to be positive.  If the model is so bad, you can actually end up with a negative R-Squared.
+
+## Adjusted R-Squared
+Same as multiple _R-Squared_ but takes into account the number of samples and variables we’re using. _Multiple R-Squared_ works great for simple linear (one variable) regression.  However, in most cases, the model has multiple variables.  The more variables we add, the more variance we’re going to explain.  So we have to control for the extra variables.
+
+Adjusted R-Squared normalizes Multiple R-Squared by taking into account how many samples you have and how many variables we’re using.
+```{r}
+#Adjusted R-Squared
+n <- length(Boston$medv)
+k <- length(lm.fit$coefficients) - 1 #Subtract one to ignore intercept
+SSE <- sum(lm.fit$residuals ** 2)
+SSyy <- sum((Boston$medv - mean(Boston$medv)) ** 2)
+1-(SSE/SSyy)*(n-1)/(n-(k+1))
+```
+Same as above.
+A larger normalizing value is going to make the Adjusted R-Squared worse since we’re subtracting its product from one.
+
+
+## F-Statistic
+Global test to check if your model has at least one significant variable.  Takes into account number of variables and observations used. Including the t-tests, this is the second _test_ that the summary function produces for lm models.  
+```{r}
+#F-Statistic
+#Ho: All coefficients are zero
+#Ha: At least one coefficient is nonzero
+#Compare test statistic to F Distribution table
+n <- length(Boston$medv)
+SSE <- sum(lm.fit$residuals**2)
+SSyy <- sum((Boston$medv-mean(Boston$medv))**2)
+k <- length(lm.fit$coefficients)-1
+((SSyy-SSE)/k) / (SSE/(n-(k+1)))
+```
+Same as above. 
+## p-value
+The _p-value_ for each term tests the null hypothesis that the coefficient is equal to zero (no effect). A low `p-value (< 0.05)` indicates that you can reject the null hypothesis. In other words, a predictor that has a low _p-value_ is likely to be a meaningful addition to your model because changes in the predictor's value are related to changes in the response variable.
+
+Conversely, a larger (insignificant) _p-value_ suggests that changes in the predictor are not associated with changes in the response.
+It seems our predictor above is fine.
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+# References
+* http://www.learnbymarketing.com/tutorials/explaining-the-lm-summary-in-r/
+* [How to Interpret Regression Analysis Results: P-values and Coefficients
+] http://blog.minitab.com/blog/adventures-in-statistics-2/how-to-interpret-regression-analysis-results-p-values-and-coefficients
