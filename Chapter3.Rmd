@@ -16,12 +16,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Libraries
 
-Load need libraries
+Load needed libraries
 
 ```{r message=FALSE}
 library (MASS) #which is a very large collection of data sets and functions
 library (ISLR) #which includes the data sets associated with this book
 library(dplyr) #for data set manuplations
+library(ggplot2) #for visualization
+library(ggfortify) #for lm visualization
+library(epiDisplay) # for enhanced display for the model
+library(car) #for lm visualization
+
 ```
 
 # Simple Linear Regression
@@ -122,44 +127,79 @@ SSyy <- sum((Boston$medv-mean(Boston$medv))**2)
 k <- length(lm.fit$coefficients)-1
 ((SSyy-SSE)/k) / (SSE/(n-(k+1)))
 ```
-Same as above. 
+Same as above.
+
 ## p-value
 The _p-value_ for each term tests the null hypothesis that the coefficient is equal to zero (no effect). A low `p-value (< 0.05)` indicates that you can reject the null hypothesis. In other words, a predictor that has a low _p-value_ is likely to be a meaningful addition to your model because changes in the predictor's value are related to changes in the response variable.
 
 Conversely, a larger (insignificant) _p-value_ suggests that changes in the predictor are not associated with changes in the response.
 It seems our predictor above is fine.
 
+## Other fields
+We can use _R_ built in `names()` function to know all `lm.fit` model properties
 ```{r}
+names(lm.fit)
+```
+and we can used _extractor_ methods to get their values (i.e `coef` method)
 
+```{r}
+confint(lm.fit)
+```
+## predict
+The `predict()` function can be used to produce confidence intervals and prediction intervals for the prediction of `medv` for a given value of `lstat`.
+
+```{r}
+predict (lm.fit ,data.frame(lstat=c(5 ,10 ,15) ), interval ="confidence")
 ```
 
 
 ```{r}
+predict (lm.fit ,data.frame(lstat=c(5 ,10 ,15) ), interval ="prediction")
 
 ```
 
+For instance, the 95% confidence interval associated with a `lstat` value of `10` is `(24.47, 25.63)`, and the 95% prediction interval is `(12.828, 37.28)`. As expected, the confidence and prediction intervals are centered around the same point (a predicted value of `25.05` for medv when `lstat` equals 10), but the latter are substantially wider.
 
+## Visualization
+I will just use `ggplot` instead of the built-in plotting system in `R` for its more enhanced results and better data manipulation
+
+### 95% confidence interval
 ```{r}
+ggplot(Boston, aes(x = lstat, y = medv)) +
+  geom_point() +
+  geom_smooth(method=lm, se=TRUE) # Add linear regression line 
+                                  #(by default includes 95% confidence region)
+                                  # Add shaded confidence region
+``` 
 
-```
-
-
+It does not seem that linear model is the best fit, let us try _loose_ method
 ```{r}
+ggplot(Boston, aes(x = lstat, y = medv)) +
+  geom_point() +
+  geom_smooth(se=TRUE) # Add linear regression line 
+                                  #(by default includes 95% confidence region)
+                                  # Add shaded confidence region
+``` 
+yeah, a little better.
 
-```
-
-
-
+### 95% confidence and prediction intervals
 ```{r}
-
+predict <- predict (lm.fit, data = Boston$lstat, interval ="prediction")
+all_data <- cbind(Boston, predict)
+ggplot(all_data, aes(x = lstat, y = medv))+
+    geom_point() +
+    geom_line(aes(y=lwr), color = "red", linetype = "dashed")+
+    geom_line(aes(y=upr), color = "red", linetype = "dashed")+
+    geom_smooth(method=lm, se=TRUE)
 ```
 
-
+### model vosualization
+residual vs fitted plot interpretation
 ```{r}
-
+autoplot(lm.fit)
 ```
-
 # References
 * http://www.learnbymarketing.com/tutorials/explaining-the-lm-summary-in-r/
 * [How to Interpret Regression Analysis Results: P-values and Coefficients
 ] http://blog.minitab.com/blog/adventures-in-statistics-2/how-to-interpret-regression-analysis-results-p-values-and-coefficients
+*https://rpubs.com/kaz_yos/car-residuals
